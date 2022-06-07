@@ -14,7 +14,12 @@ def locateParticals(img):
     abnormalMatrix = np.zeros(img.shape)
     abnormalMatrix.fill(meanValue)
     abnormalMatrix = np.absolute(np.subtract(img,abnormalMatrix))
-    count = np.count_nonzero(abnormalMatrix > 60)
+
+    # we regard abnormal particel as 3 * std
+    threshold = 3 * math.ceil(np.std(abnormalMatrix))
+    abnormalMatrix = (abnormalMatrix > threshold).astype(int)
+
+    
     pdb.set_trace()
 
 
@@ -54,3 +59,4 @@ def processVideo(path, frameGap):
 
 
 processVideo("1.mp4", 6)
+# locateParticals(np.array([[5,5,5],[5,5,5],[5,5,1000]]))
