@@ -4,13 +4,18 @@ import cv2
 import pdb
 
 # set np print with no limitations
-np.set_printoptions(threshold=np.inf)
+# np.set_printoptions(threshold=np.inf)
 
-# 1. 先图像灰度的求平均值， 找到异常小的值，把灰度图转化为0和1的异常图
+# 1. 先图像灰度的求平均值， 找到异常的值，把灰度图转化为0和1的异常图
 # 2. 找出聚集在一起的异常点，可以同过面积进行筛选噪声点
 # 3. particle的中心可以用 (x_difference/2, y_difference / 2) 来估计
 def locateParticals(img):
-    return []
+    meanValue = np.mean(img)
+    abnormalMatrix = np.zeros(img.shape)
+    abnormalMatrix.fill(meanValue)
+    abnormalMatrix = np.absolute(np.subtract(img,abnormalMatrix))
+    count = np.count_nonzero(abnormalMatrix > 60)
+    pdb.set_trace()
 
 
 def analyzeMovements(imgPre,imgCur):
@@ -35,8 +40,9 @@ def processVideo(path, frameGap):
             ret, frame = cap.read()
             # covert to gray scale
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            pdb.set_trace()
-            cv2.imshow("frame", gray)
+            locateParticals(gray)
+            # pdb.set_trace()
+            # cv2.imshow("frame", gray)
 
         if cv2.waitKey(1) & 0xFF == ord("q"):
             break
