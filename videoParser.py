@@ -3,28 +3,21 @@ import math
 import cv2
 import pdb
 
+from Particel import ImageParser
+
 # set np print with no limitations
 # np.set_printoptions(threshold=np.inf)
 
-# 1. 先图像灰度的求平均值， 找到异常的值，把灰度图转化为0和1的异常图
-# 2. 找出聚集在一起的异常点，可以同过面积进行筛选噪声点
-# 3. particle的中心可以用 (x_difference/2, y_difference / 2) 来估计
+
 def locateParticals(img):
-    meanValue = np.mean(img)
-    abnormalMatrix = np.zeros(img.shape)
-    abnormalMatrix.fill(meanValue)
-    abnormalMatrix = np.absolute(np.subtract(img,abnormalMatrix))
+    ImageParser(img)
 
-    # we regard abnormal particel as 3 * std
-    threshold = 3 * math.ceil(np.std(abnormalMatrix))
-    abnormalMatrix = (abnormalMatrix > threshold).astype(int)
-
-    
     pdb.set_trace()
 
 
-def analyzeMovements(imgPre,imgCur):
+def analyzeMovements(imgPre, imgCur):
     return []
+
 
 def processVideo(path, frameGap):
     cap = cv2.VideoCapture(path)
