@@ -1,55 +1,84 @@
 import numpy as np
 import math
+from matplotlib import pyplot as plt
+import pdb
+
 
 class Particel:
     def __init__(self, points):
-        self.position = [0,0]
-        self.area = len(points)
+        self.points = points
 
-# 1. 先图像灰度的求平均值， 找到异常的值，把灰度图转化为0和1的异常图
-# 2. 找出聚集在一起的异常点，可以同过面积进行筛选噪声点
-# 3. particle的中心可以用 (x_difference/2, y_difference / 2) 来估计
+        maxY = max(self.points, key=lambda p: p[0])[0]
+        minY = min(self.points, key=lambda p: p[0])[0]
+        maxX = max(self.points, key=lambda p: p[1])[1]
+        minX = min(self.points, key=lambda p: p[1])[1]
+
+        self.center = [(maxY+minY)/2, (maxX+minX)/2]
+    def getCenter(self):
+        return self.center
+
 class ImageParser:
-    def __init__(self, img):
+    def __init__(self, img, particleCount, particleColor="dark"):
+        self.particleColor = particleColor
+        self.particleCount = particleCount
         self.map = self.preprocessImg(img)
         self.visitedMap = np.zeros(self.map.shape)
-        self.direction =[[1,0],[-1,0],[0,-1],[0,1]]
-    
+        self.direction = [[1, 0], [-1, 0], [0, -1], [0, 1]]
+
     def preprocessImg(self, img):
-        meanValue = np.mean(img)
-        abnormalMatrix = np.zeros(img.shape)
-        abnormalMatrix.fill(meanValue)
-        abnormalMatrix = np.absolute(np.subtract(img,abnormalMatrix))
+        abnormalMatrix = np.copy(img)
+        mean = np.mean(abnormalMatrix)
         # we regard abnormal particel as 3 * std
-        threshold = 3 * math.ceil(np.std(abnormalMatrix))
-        abnormalMatrix = (abnormalMatrix > threshold).astype(int)
+        cutOff = 2.5 * np.std(abnormalMatrix)
+        if self.particleColor == "dark":
+            abnormalMatrix = np.where((abnormalMatrix > mean - cutOff), 0, 1)
+        else:
+            abnormalMatrix = np.where((abnormalMatrix < mean + cutOff), 0, 1)
+
+        ### show abnormal Matrix ###
+        # plt.imshow(abnormalMatrix)
+        # plt.show()
+        # pdb.set_trace()
         return abnormalMatrix
 
     def bfs(self, y, x):
         group = []
-        queue = [[y,x]]
+        queue = [[y, x]]
         self.visitedMap[y][x] = 1
-
         while queue:
             cur = queue.pop(0)
             group.append(cur)
             for cor in self.direction:
-                newY += cor[0]
-                newX += cor[1]
-
-                if newY < 0 or newY >= self.map.shape[0] or newX < 0 or newX >= self.map.shape[1]:
+                newY = cur[0] + cor[0]
+                newX = cur[1] + cor[1]
+                if (
+                    newY < 0
+                    or newY >= self.map.shape[0]
+                    or newX < 0
+                    or newX >= self.map.shape[1]
+                ):
                     continue
                 if self.visitedMap[newY][newX]:
                     continue
-                
-                self.visitedMap[newY][newX] = 1
-                queue.append([newY,newX])        
+                if self.map[newY][newX] > 0:
+                    self.visitedMap[newY][newX] = 1
+                    queue.append([newY, newX])
         return group
 
     def gatheringPoints(self):
         candidates = []
-        for y in map:
-            for x in map:
-                self.bfs(y,x)
+        for y in range(self.map.shape[0]):
+            for x in range(self.map.shape[1]):
+                if self.map[y][x] > 0 and self.visitedMap[y][x] == 0:
+                    candidate = self.bfs(y, x)
+                    if len(candidate) > 3:
+                        candidates.append(candidate)
+        sortedCandidates = sorted(candidates, key=lambda x: len(x), reverse=True)[
+            : self.particleCount
+        ]
+        return sortedCandidates
 
-        return candidates
+    def generateParticles(self):
+        pointsGroup = self.gatheringPoints()
+        particles = [Particel(points) for points in pointsGroup]
+        return particles

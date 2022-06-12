@@ -10,8 +10,8 @@ from Particel import ImageParser
 
 
 def locateParticals(img):
-    ImageParser(img)
-
+    ip = ImageParser(img, 7, "dark")
+    particles = ip.generateParticles()
     pdb.set_trace()
 
 
