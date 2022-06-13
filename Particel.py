@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import cv2
 from matplotlib import pyplot as plt
 import pdb
 
@@ -13,12 +14,14 @@ class Particel:
         maxX = max(self.points, key=lambda p: p[1])[1]
         minX = min(self.points, key=lambda p: p[1])[1]
 
-        self.center = [(maxY+minY)/2, (maxX+minX)/2]
+        self.center = [(maxY + minY) / 2, (maxX + minX) / 2]
+
     def getCenter(self):
         return self.center
 
+
 class ImageParser:
-    def __init__(self, img, particleCount, particleColor="dark"):
+    def __init__(self, img, particleCount, particleColor):
         self.particleColor = particleColor
         self.particleCount = particleCount
         self.map = self.preprocessImg(img)
@@ -26,7 +29,9 @@ class ImageParser:
         self.direction = [[1, 0], [-1, 0], [0, -1], [0, 1]]
 
     def preprocessImg(self, img):
-        abnormalMatrix = np.copy(img)
+        # covert to gray scale
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        abnormalMatrix = np.copy(gray)
         mean = np.mean(abnormalMatrix)
         # we regard abnormal particel as 3 * std
         cutOff = 2.5 * np.std(abnormalMatrix)
@@ -39,6 +44,7 @@ class ImageParser:
         # plt.imshow(abnormalMatrix)
         # plt.show()
         # pdb.set_trace()
+
         return abnormalMatrix
 
     def bfs(self, y, x):
@@ -81,4 +87,6 @@ class ImageParser:
     def generateParticles(self):
         pointsGroup = self.gatheringPoints()
         particles = [Particel(points) for points in pointsGroup]
-        return particles
+        centers = [p.getCenter() for p in particles]
+        sortedCenters = sorted(centers, key=lambda x: x[0])
+        return sortedCenters
